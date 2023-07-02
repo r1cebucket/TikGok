@@ -17,10 +17,11 @@ import (
 
 // InitDB to init database
 func InitDB() *gorm.DB {
+	// config from nacos
 	c := config.GlobalServerConfig.MysqlInfo
 	dsn := fmt.Sprintf(consts.MySqlDSN, c.User, c.Password, c.Host, c.Port, c.Name)
 	newLogger := logger.New(
-		logrus.NewWriter(), // io writer
+		logrus.NewWriter(), // io writer write to otel (from otel)
 		logger.Config{
 			SlowThreshold: time.Second,   // Slow SQL Threshold
 			LogLevel:      logger.Silent, // Log level
@@ -37,7 +38,7 @@ func InitDB() *gorm.DB {
 	if err != nil {
 		klog.Fatalf("init gorm failed: %s", err)
 	}
-	if err := db.Use(tracing.NewPlugin()); err != nil {
+	if err := db.Use(tracing.NewPlugin()); err != nil { // otel trace (from gorm)
 		klog.Fatalf("use tracing plugin failed: %s", err)
 	}
 	return db

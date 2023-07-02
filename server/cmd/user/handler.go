@@ -24,11 +24,11 @@ import (
 // UserServiceImpl implements the last service interface defined in the IDL.
 type UserServiceImpl struct {
 	Jwt *middleware.JWT
+	Dao *dao.User
 	SocialManager
 	ChatManager
-	RedisManager
 	InteractionManager
-	Dao *dao.User
+	RedisManager
 }
 
 // SocialManager defines the Anti Corruption Layer

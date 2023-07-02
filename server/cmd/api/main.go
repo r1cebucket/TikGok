@@ -17,28 +17,42 @@ import (
 
 func main() {
 	// initialize
-	initialize.InitLogger()
-	r, info := initialize.InitNacos()
-	tracer, cfg := hertztracing.NewServerTracer()
-	rpc.Init()
-	config.GlobalUploadService = initialize2.Init()
 
-	go func() {
-		err := config.GlobalUploadService.RunVideoUpload()
-		if err != nil {
-			hlog.Fatal("upload service err", err)
-		}
-	}()
-	// create a new server
+	// init logger for hertz
+	initialize.InitLogger()
+
+	// read local nacos config
+	// read remote config from nacos and save to config.GlobalServerConfig
+	// TODO: create registry and get registry info
+	registry, registryInfo := initialize.InitNacos()
+
+	// TODO
+	tracer, cfg := hertztracing.NewServerTracer()
+	// create rpc client
+	rpc.Init() // TODO
+
+	{ // upload service
+		config.GlobalUploadService = initialize2.Init()
+
+		// get upload task and run upload
+		go func() {
+			err := config.GlobalUploadService.RunVideoUpload()
+			if err != nil {
+				hlog.Fatal("upload service err", err)
+			}
+		}()
+	}
+
+	// create a new api server and run
 	h := server.New(
 		tracer,
 		server.WithHostPorts(fmt.Sprintf(":%d", config.GlobalServerConfig.Port)),
-		server.WithRegistry(r, info),
+		server.WithRegistry(registry, registryInfo),
 		server.WithHandleMethodNotAllowed(true),
 	)
 	// use pprof & tracer mw
 	pprof.Register(h)
 	h.Use(hertztracing.ServerMiddleware(cfg))
-	register(h)
+	register(h) //  register api routers
 	h.Spin()
 }

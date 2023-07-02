@@ -107,6 +107,7 @@ func (s *Service) RunVideoUpload() error {
 
 		var wg sync.WaitGroup
 		wg.Add(2)
+		// upload thumbnail
 		go func() {
 			defer func() {
 				defer wg.Done()
@@ -119,6 +120,7 @@ func (s *Service) RunVideoUpload() error {
 			}
 		}()
 
+		// upload video
 		go func() {
 			defer func() {
 				defer wg.Done()

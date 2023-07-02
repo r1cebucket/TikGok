@@ -23,41 +23,59 @@ import (
 
 func main() {
 	// initialization
+
+	// init logger for kitex (klog)
 	initialize.InitLogger()
+	// cmd line args
 	IP, Port := initialize.InitFlag()
-	r, info := initialize.InitNacos(Port)
+
+	// read local nacos config
+	// read remote config from nacos and save to config.GlobalServerConfig
+	// TODO: create registry and get registry info
+	registry, registryInfo := initialize.InitNacos(Port)
+
+	// create DB client and write log and trace to Otel
 	db := initialize.InitDB()
+
+	// TODO: provider from kite
 	p := provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(config.GlobalServerConfig.Name),
 		provider.WithExportEndpoint(config.GlobalServerConfig.OtelInfo.EndPoint),
 		provider.WithInsecure(),
 	)
 	defer p.Shutdown(context.Background())
+
 	rc := initialize.InitRedis()
+
+	// rpc client
 	socialClient := initialize.InitSocial()
 	chatClient := initialize.InitChat()
 	interactClient := initialize.InitInteraction()
 
-	impl := &UserServiceImpl{
-		Jwt:                middleware.NewJWT(config.GlobalServerConfig.JWTInfo.SigningKey),
-		SocialManager:      pkg.NewSocialManager(socialClient),
-		InteractionManager: pkg.NewInteractionManager(interactClient),
-		ChatManager:        pkg.NewChatManager(chatClient),
-		RedisManager:       pkg.NewRedisManager(rc),
-		Dao:                dao.NewUser(db),
-	}
-	// Create new server.
-	srv := user.NewServer(impl,
-		server.WithServiceAddr(utils.NewNetAddr(consts.TCP, net.JoinHostPort(IP, strconv.Itoa(Port)))),
-		server.WithRegistry(r),
-		server.WithRegistryInfo(info),
-		server.WithLimit(&limit.Option{MaxConnections: 2000, MaxQPS: 500}),
-		server.WithSuite(tracing.NewServerSuite()),
-		server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: config.GlobalServerConfig.Name}),
-	)
+	{ // TODO: rpc server
+		// clients for rpc server
+		impl := &UserServiceImpl{
+			Jwt:                middleware.NewJWT(config.GlobalServerConfig.JWTInfo.SigningKey),
+			SocialManager:      pkg.NewSocialManager(socialClient),
+			InteractionManager: pkg.NewInteractionManager(interactClient),
+			ChatManager:        pkg.NewChatManager(chatClient),
+			RedisManager:       pkg.NewRedisManager(rc),
+			Dao:                dao.NewUser(db),
+		}
 
-	err := srv.Run()
-	if err != nil {
-		klog.Fatal(err)
+		// Create new server.
+		srv := user.NewServer(impl,
+			server.WithServiceAddr(utils.NewNetAddr(consts.TCP, net.JoinHostPort(IP, strconv.Itoa(Port)))),
+			server.WithRegistry(registry),
+			server.WithRegistryInfo(registryInfo),
+			server.WithLimit(&limit.Option{MaxConnections: 2000, MaxQPS: 500}),
+			server.WithSuite(tracing.NewServerSuite()),
+			server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: config.GlobalServerConfig.Name}),
+		)
+
+		err := srv.Run()
+		if err != nil {
+			klog.Fatal(err)
+		}
 	}
 }

@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	GlobalServerConfig  = &ServerConfig{}
-	GlobalNacosConfig   = &NacosConfig{}
+	GlobalServerConfig  = &ServerConfig{} // from nacos (remote)
+	GlobalNacosConfig   = &NacosConfig{}  // local nacos config
 	GlobalUploadService *uploadService.Service
 
+	// init rpc client
 	GlobalChatClient        chatservice.Client
 	GlobalUserClient        userservice.Client
 	GlobalVideoClient       videoservice.Client

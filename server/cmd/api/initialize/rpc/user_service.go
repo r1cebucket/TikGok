@@ -41,23 +41,25 @@ func initUser() {
 			ClientConfig:  &cc,
 			ServerConfigs: sc,
 		})
-	r := nacos.NewNacosResolver(nacosCli, nacos.WithGroup(consts.UserGroup))
+	// create resolver from nacos
+	resolver := nacos.NewNacosResolver(nacosCli, nacos.WithGroup(consts.UserGroup))
 	if err != nil {
 		klog.Fatalf("new nacos client failed: %s", err.Error())
 	}
+	// TODO: provider from kitex
 	provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(config.GlobalServerConfig.Name),
 		provider.WithExportEndpoint(config.GlobalServerConfig.OtelInfo.EndPoint),
 		provider.WithInsecure(),
 	)
 
-	// create a new client
+	// create a user service client
 	c, err := userservice.NewClient(
 		config.GlobalServerConfig.UserSrvInfo.Name,
-		client.WithResolver(r),                                     // service discovery
-		client.WithLoadBalancer(loadbalance.NewWeightedBalancer()), // load balance
-		client.WithMuxConnection(1),                                // multiplexing
-		client.WithSuite(tracing.NewClientSuite()),
+		client.WithResolver(resolver),                              // service discovery
+		client.WithLoadBalancer(loadbalance.NewWeightedBalancer()), // load balance from kitex
+		client.WithMuxConnection(1),                                // multiplexing (#conn)
+		client.WithSuite(tracing.NewClientSuite()),                 // trace from kitex otel
 		client.WithClientBasicInfo(&rpcinfo.EndpointBasicInfo{ServiceName: config.GlobalServerConfig.UserSrvInfo.Name}),
 	)
 	if err != nil {

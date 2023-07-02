@@ -21,6 +21,7 @@ import (
 
 // InitNacos to init nacos
 func InitNacos() (registry.Registry, *registry.Info) {
+	// read local nacos config
 	v := viper.New()
 	v.SetConfigFile(consts.ApiConfigPath)
 	if err := v.ReadInConfig(); err != nil {
@@ -39,6 +40,7 @@ func InitNacos() (registry.Registry, *registry.Info) {
 		},
 	}
 
+	// nacos client config
 	cc := constant.ClientConfig{
 		NamespaceId:         config.GlobalNacosConfig.Namespace,
 		TimeoutMs:           5000,
@@ -56,6 +58,7 @@ func InitNacos() (registry.Registry, *registry.Info) {
 		klog.Fatalf("create config client failed: %s", err.Error())
 	}
 
+	// get config conetent (json) from nacos (as config center)
 	content, err := configClient.GetConfig(vo.ConfigParam{
 		DataId: config.GlobalNacosConfig.DataId,
 		Group:  config.GlobalNacosConfig.Group,
@@ -76,6 +79,8 @@ func InitNacos() (registry.Registry, *registry.Info) {
 		}
 	}
 
+	// connect to nacos (as registry center)
+	// create client to get registry info
 	registryClient, err := clients.NewNamingClient(
 		vo.NacosClientParam{
 			ClientConfig:  &cc,
@@ -86,6 +91,7 @@ func InitNacos() (registry.Registry, *registry.Info) {
 		klog.Fatal("create registryClient err: %s", err.Error())
 	}
 
+	// using client to get resigtry
 	r := nacos.NewNacosRegistry(registryClient, nacos.WithRegistryGroup(consts.ApiGroup))
 
 	sf, err := snowflake.NewNode(2)

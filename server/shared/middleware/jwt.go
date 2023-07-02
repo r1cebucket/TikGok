@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/CyanAsterisk/TikGok/server/cmd/api/model"
+	models "github.com/CyanAsterisk/TikGok/server/cmd/api/model"
 	"github.com/CyanAsterisk/TikGok/server/shared/consts"
 	"github.com/CyanAsterisk/TikGok/server/shared/errno"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -46,8 +46,11 @@ func JWTAuth(secretKey string) app.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// store info in the ctx
 		c.Set(consts.Claims, claims)
 		c.Set(consts.AccountID, claims.ID)
+
 		c.Next(ctx)
 	}
 }

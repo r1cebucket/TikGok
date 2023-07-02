@@ -2,6 +2,7 @@ package config
 
 import "github.com/CyanAsterisk/TikGok/server/cmd/api/pkg/uploadService/config"
 
+// local nacos config for creating nacos client
 type NacosConfig struct {
 	Host      string `mapstructure:"host"`
 	Port      uint64 `mapstructure:"port"`
