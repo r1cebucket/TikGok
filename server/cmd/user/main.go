@@ -37,7 +37,7 @@ func main() {
 	// create DB client and write log and trace to Otel
 	db := initialize.InitDB()
 
-	// TODO: provider from kite
+	// TODO: provider from kitex
 	p := provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(config.GlobalServerConfig.Name),
 		provider.WithExportEndpoint(config.GlobalServerConfig.OtelInfo.EndPoint),

@@ -29,7 +29,7 @@ func NewPublisher(conn *amqp.Connection, exchange string) (*Publisher, error) {
 		return nil, fmt.Errorf("cannot allocate channel: %v", err)
 	}
 
-	if err = declareExchange(ch, exchange); err != nil {
+	if err = declareExchange(ch, exchange); err != nil { // binding
 		return nil, fmt.Errorf("cannot declare exchange: %v", err)
 	}
 	return &Publisher{
@@ -134,6 +134,7 @@ func (s *Subscriber) Subscribe(c context.Context) (taskChan chan *VideoUploadTas
 	return taskChan, cleanUp, nil
 }
 
+// binding channel to exchange
 func declareExchange(ch *amqp.Channel, exchange string) error {
 	return ch.ExchangeDeclare(exchange, "fanout", true, false, false, false, nil)
 }

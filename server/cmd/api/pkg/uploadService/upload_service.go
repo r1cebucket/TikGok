@@ -46,6 +46,7 @@ var videoSuffixSet = map[string]struct{}{
 	"mpg": {}, "mov": {},
 }
 
+// save file to local and create a task
 func (s *Service) UpLoadFile(videoFH *multipart.FileHeader) (playerUrl, coverUrl string, err error) {
 	suffix, err := getFileSuffix(videoFH.Filename)
 	if err != nil {
@@ -91,6 +92,7 @@ func (s *Service) UpLoadFile(videoFH *multipart.FileHeader) (playerUrl, coverUrl
 	return urlPrefix + task.VideoUploadPath, urlPrefix + task.CoverUploadPath, nil
 }
 
+// cunsume from task queue and upload to minio
 func (s *Service) RunVideoUpload() error {
 	taskCh, cleanUp, err := s.subscriber.Subscribe(context.Background())
 	defer cleanUp()

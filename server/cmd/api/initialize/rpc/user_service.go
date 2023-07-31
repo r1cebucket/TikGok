@@ -46,10 +46,13 @@ func initUser() {
 	if err != nil {
 		klog.Fatalf("new nacos client failed: %s", err.Error())
 	}
-	// TODO: provider from kitex
+
+	// init provider from kitex:
+	// 	tarce: init trace provider
+	// 	metric: inti metirc pusher
 	provider.NewOpenTelemetryProvider(
 		provider.WithServiceName(config.GlobalServerConfig.Name),
-		provider.WithExportEndpoint(config.GlobalServerConfig.OtelInfo.EndPoint),
+		provider.WithExportEndpoint(config.GlobalServerConfig.OtelInfo.EndPoint), // collector address
 		provider.WithInsecure(),
 	)
 
